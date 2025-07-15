@@ -134,7 +134,7 @@ def toggle_editor():
     with dpg.window(label='Editor', tag="editor_window", width=800, height=600, on_close=window_close_callback):
         dpg.add_input_text(
             width=-1,
-            height=-50,
+            height=-70,
             tag="userscript",
             multiline=True,
             tab_input=True,
@@ -145,6 +145,8 @@ def toggle_editor():
             dpg.set_value("userscript", "return (255,255,255)")
         else:
             dpg.set_value("userscript", challenge.get("starter", "return (255,255,255)"))
+
+        dpg.add_text("Tokens: ???", tag="editor_tokens")
 
         with dpg.group(horizontal=True):
             dpg.add_text("Width :")
@@ -231,6 +233,9 @@ def draw_usercode(sender, app_data, user_data):
                     fill=color
                 )
 
+    tokens = get_token_count(dpg.get_value("userscript"))
+    dpg.set_value("editor_tokens", f"Tokens: {tokens}")
+
     for pixel, value in user_colormap.items():
         if value != chall_colormap.get(pixel, None):
             return
@@ -238,12 +243,16 @@ def draw_usercode(sender, app_data, user_data):
     if challenge != None:
         name = challenge.get("title")
         id = challenge.get("id")
-        tokens = get_token_count(dpg.get_value("userscript"))
 
         if save.get(f"challenge.{id}.completed", False) == False:
             save.set(f"challenge.{id}.completed", True)
             save.set(f"challenge.{id}.tokens", tokens)
             show_popup("Challenge completed!", f"You've solved the '{name}' challenge with {tokens} tokens!")
+        else:
+            old_record = save.get(f"challenge.{id}.tokens", 99999999)
+            if old_record > tokens:
+                save.set(f"challenge.{id}.tokens", tokens)
+                show_popup("Record beaten!", f"You've beat your past record for this challenge by {old_record-tokens} tokens ({old_record} -> {tokens})")
 
 def toggle_preview():
     if dpg.does_item_exist("preview_window"):
