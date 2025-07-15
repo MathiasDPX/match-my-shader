@@ -4,6 +4,7 @@ from glob import glob
 import webbrowser
 import importlib
 import tokenize
+import asyncio
 import save_manager as save
 
 dpg.create_context()
@@ -130,7 +131,7 @@ def toggle_editor():
     if dpg.does_item_exist("editor_window"):
         return dpg.delete_item("editor_window")
 
-    with dpg.window(label='Editor', tag="editor_window", width=800, height=600,on_close=window_close_callback):
+    with dpg.window(label='Editor', tag="editor_window", width=800, height=600, on_close=window_close_callback):
         dpg.add_input_text(
             width=-1,
             height=-50,
@@ -345,21 +346,24 @@ def draw_challenge(sender, app_data, user_data):
     dpg.delete_item("chall_drawlist")
     with dpg.drawlist(width=window_width, height=window_height, parent=window, tag="chall_drawlist"):
         # Draw
+        async def draw_pixel(x,y):
+            color = chall_colormap[f"{x},{y}"]
+            dpg.draw_rectangle(
+                (
+                    x_offset + (x * pixel_width),
+                    y_offset + (y * pixel_height)
+                ),
+                (
+                    x_offset + ((x + 1) * pixel_width),
+                    y_offset + ((y + 1) * pixel_height)
+                ),
+                color=(0,0,0,0),
+                fill=color
+            )
+
         for x in range(width):
             for y in range(height):
-                color = chall_colormap[f"{x},{y}"]
-                dpg.draw_rectangle(
-                    (
-                        x_offset + (x * pixel_width),
-                        y_offset + (y * pixel_height)
-                    ),
-                    (
-                        x_offset + ((x + 1) * pixel_width),
-                        y_offset + ((y + 1) * pixel_height)
-                    ),
-                    color=(0,0,0,0),
-                    fill=color
-                )
+                asyncio.run(draw_pixel(x,y))
 
 def make_chall_callback(challenge_id):
     return lambda: open_challenge(challenge_id)
