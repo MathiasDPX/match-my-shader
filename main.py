@@ -126,7 +126,7 @@ def toggle_editor():
     if dpg.does_item_exist("editor_window"):
         return dpg.delete_item("editor_window")
 
-    with dpg.window(label='Editor', tag="editor_window", width=800, height=600):
+    with dpg.window(label='Editor', tag="editor_window", width=800, height=600,on_close=window_close_callback):
         dpg.add_input_text(
             width=-1,
             height=-50,
@@ -149,6 +149,7 @@ def toggle_editor():
             dpg.add_text("Height:")
             dpg.add_slider_int(min_value=1, max_value=512, width=725, tag="height-editor-slider", default_value=16)
 
+    place_window("editor_window")
     dpg.bind_item_handler_registry("editor_window", "editor_handler")
     draw_usercode(None, None, None)
 
@@ -243,10 +244,11 @@ def toggle_preview():
     if dpg.does_item_exist("preview_window"):
         return dpg.delete_item("preview_window")
     
-    with dpg.window(label="Code Preview", tag="preview_window", width=300, height=300, no_scrollbar=True):
+    with dpg.window(label="Code Preview", tag="preview_window", width=300, height=300, no_scrollbar=True,on_close=window_close_callback):
         with dpg.drawlist(width=265, height=265, tag="user_drawlist"):
             draw_usercode(None, None, None)
 
+    place_window("preview_window")
     dpg.bind_item_handler_registry("preview_window", "preview_handler")
     draw_usercode(None, None, None)
 
@@ -269,6 +271,7 @@ def open_challenge(cid):
         if dpg.does_item_exist("userscript"):
             dpg.set_value("userscript", "return 0xFFFFFF")
         if dpg.does_item_exist("chall_preview_window"):
+            window_close_callback("chall_preview_window", None, None)
             dpg.delete_item("chall_preview_window")
         return 
     
@@ -279,14 +282,16 @@ def open_challenge(cid):
     
     draw_usercode(None, None, None)
 
-    if dpg.does_item_exist("chall_preview_window"):
-        dpg.delete_item("chall_preview_window")
-
     with dpg.window(label="Challenge Preview", tag="chall_preview_window", width=300, height=300, no_scrollbar=True, no_close=True):
         with dpg.drawlist(width=265, height=265, tag="chall_drawlist"):
             pass
 
+    place_window("chall_preview_window")
     draw_challenge(None, None, None)
+
+def window_close_callback(sender, app_data, user_data):
+    save.set(f"window.{sender}.pos", dpg.get_item_pos(sender))
+    save.set(f"window.{sender}.size", [dpg.get_item_width(sender), dpg.get_item_height(sender)])
 
 def draw_challenge(sender, app_data, user_data):
     global chall_colormap
@@ -352,11 +357,29 @@ def draw_challenge(sender, app_data, user_data):
 def make_chall_callback(challenge_id):
     return lambda: open_challenge(challenge_id)
 
+def place_window(id):
+    pos = save.get(f"window.{id}.pos", [0,0])
+    current_w, current_h = dpg.get_item_width(id), dpg.get_item_height(id)
+    size = save.get(f"window.{id}.size", [current_w, current_h])
+    vw, vh = dpg.get_viewport_width(), dpg.get_viewport_height()
+
+    clamped_x = max(0, min(pos[0], vw - size[0]))
+    clamped_y = max(0, min(pos[1], vh - size[1]))
+
+    dpg.set_item_pos(id, [clamped_x, clamped_y])
+    dpg.set_item_width(id, size[0])
+    dpg.set_item_height(id, size[1])
+
 def open_challenges_window():
     if dpg.does_item_exist("challenges_list"):
         return dpg.delete_item("challenges_list")
 
-    with dpg.window(label="Challenges", tag="challenges_list", width=200, height=300):
+    with dpg.window(
+        label="Challenges",
+        tag="challenges_list",
+        width=200,
+        height=300,
+        on_close=window_close_callback):
         with dpg.theme() as completed_button_theme:
             with dpg.theme_component(dpg.mvButton):
                 dpg.add_theme_color(dpg.mvThemeCol_Button, (34, 173, 19,255))
@@ -373,6 +396,14 @@ def open_challenges_window():
             button = dpg.add_button(label=chall['title'], width=-1, callback=make_chall_callback(cid))
             if save.get(f"challenge.{cid}.completed", False):
                 dpg.bind_item_theme(button, completed_button_theme)
+
+    place_window("challenges_list")
+
+def exit_callback():
+    window_close_callback("challenges_list", None, None)
+    window_close_callback("editor_window", None, None)
+    window_close_callback("preview_window", None, None)
+    window_close_callback("chall_preview_window", None, None)
 
 # Menu bar
 with dpg.viewport_menu_bar():
@@ -393,6 +424,8 @@ with dpg.item_handler_registry(tag="editor_handler"):
 
 if save.get("firstTime", True):
     setup_welcome_window()
+
+dpg.set_exit_callback(exit_callback)
 
 dpg.start_dearpygui()
 dpg.destroy_context()
