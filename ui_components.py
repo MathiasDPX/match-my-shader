@@ -50,7 +50,7 @@ def create_welcome_window():
     if save.get("firstTime", True):
         with dpg.window(label="Welcome!", width=500, height=300, tag="welcome_window", no_close=True, no_resize=True):
             with dpg.child_window(autosize_x=True, autosize_y=True):
-                dpg.add_text("Hi! If you're seeing this it mean it's your first time launching 'Match my Shader' \n\nThis game was created in just 10 days for a game jam called Timeless, where the goal was to build a game that someone could enjoy for the next 10 years.\n\nIn Match My Shader, your challenge is to write code that draws a shader to match a target pixel-perfect result. It's creative, puzzling, and endlessly replayable.\n\nThere is two gamemodes: Freeplay, where you just code to ", wrap=0)
+                dpg.add_text("Hi! If you're seeing this it mean it's your first time launching 'Match my Shader' \n\nThis game was created in just 10 days for a game jam called Timeless, where the goal was to build a game that someone could enjoy for the next 10 years.\n\nIn Match My Shader, your challenge is to write (Python) code that draws a shader to match a target pixel-perfect result. It's creative, puzzling, and endlessly replayable.\n\nThere is two gamemodes: Freeplay, where you just code for fun or drawing things, and a Challenge mode where you have to match a target (as said about) ", wrap=0)
 
                 dpg.add_button(label="More about Timeless",
                                 callback=lambda: webbrowser.open('https://timeless.hackclub.com/'),
