@@ -7,7 +7,13 @@ import tokenize
 import save_manager as save
 
 dpg.create_context()
-dpg.create_viewport(title='Match my Shader', width=1600, height=1000)
+dpg.create_viewport(
+    title='Match my Shader',
+    width=1600,
+    height=1000,
+    small_icon="icon.ico",
+    large_icon="icon.ico"
+)
 
 # Load challenges
 challenges = {}
@@ -95,8 +101,6 @@ def safe_eval(usercode, x,y):
 def get_token_count(code):
     tokens = list(tokenize.tokenize(BytesIO(code.encode('utf-8')).readline))
     real_tokens = [tok for tok in tokens if tok.type not in (tokenize.ENCODING, tokenize.ENDMARKER, tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE)]
-
-    print(real_tokens)
 
     return len(real_tokens)
 
@@ -290,8 +294,11 @@ def open_challenge(cid):
     draw_challenge(None, None, None)
 
 def window_close_callback(sender, app_data, user_data):
-    save.set(f"window.{sender}.pos", dpg.get_item_pos(sender))
-    save.set(f"window.{sender}.size", [dpg.get_item_width(sender), dpg.get_item_height(sender)])
+    if dpg.does_item_exist(sender):
+        save.set(f"window.{sender}.pos", dpg.get_item_pos(sender))
+        save.set(f"window.{sender}.size", [dpg.get_item_width(sender), dpg.get_item_height(sender)])
+
+        dpg.delete_item(sender)
 
 def draw_challenge(sender, app_data, user_data):
     global chall_colormap
@@ -424,8 +431,6 @@ with dpg.item_handler_registry(tag="editor_handler"):
 
 if save.get("firstTime", True):
     setup_welcome_window()
-
-dpg.set_exit_callback(exit_callback)
 
 dpg.start_dearpygui()
 dpg.destroy_context()
