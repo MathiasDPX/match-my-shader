@@ -1,16 +1,20 @@
 import dearpygui.dearpygui as dpg
+from io import BytesIO
 from glob import glob
 import webbrowser
 import importlib
+import tokenize
 import save_manager as save
 
 dpg.create_context()
 dpg.create_viewport(title='Match my Shader', width=1600, height=1000)
 
 # Load challenges
-challenges = {
-    "None": None
-}
+challenges = {}
+
+# Used to compare user and challenge
+user_colormap={}
+chall_colormap={}
 
 for challenge in glob("*.py", root_dir="challenges"):
     module = importlib.import_module(f"challenges.{challenge[:-3]}")
@@ -25,14 +29,15 @@ for challenge in glob("*.py", root_dir="challenges"):
 
     headers = getattr(module, "HEADERS")
     headers['run_func'] = getattr(module, "run")
+    headers['id'] = challenge[:-3]
 
-    challenges[headers['title']] = headers
+    challenges[headers['id']] = headers
 
 # Welcome window
 if save.get("firstTime", True):
     with dpg.window(label="Welcome!", width=500, height=300, tag="welcome_window", no_close=True, no_resize=True) as main_window:
         with dpg.child_window(autosize_x=True, autosize_y=True):
-            dpg.add_text("Hi! If you're seeing this it mean it's your first time launching 'Match my Shader' \n\nThis game was created in just 10 days for a game jam called Timeless, where the goal was to build a game that someone could enjoy for the next 10 years.\n\nIn Match My Shader, your challenge is to write code that draws a shader to match a target pixel-perfect result. It's creative, puzzling, and endlessly replayable. Enjoy!", wrap=0)
+            dpg.add_text("Hi! If you're seeing this it mean it's your first time launching 'Match my Shader' \n\nThis game was created in just 10 days for a game jam called Timeless, where the goal was to build a game that someone could enjoy for the next 10 years.\n\nIn Match My Shader, your challenge is to write code that draws a shader to match a target pixel-perfect result. It's creative, puzzling, and endlessly replayable.\n\nThere is two gamemodes: Freeplay, where you just code to ", wrap=0)
 
             dpg.add_button(label="More about Timeless",
                             callback=lambda:webbrowser.open('https://timeless.hackclub.com/'),
@@ -87,6 +92,29 @@ def safe_eval(usercode, x,y):
     exec(wrapped_code, safe_globals, safe_locals)
     return postprocessColor(safe_locals["_user_func"](x,y))
 
+def get_token_count(code):
+    tokens = list(tokenize.tokenize(BytesIO(code.encode('utf-8')).readline))
+    real_tokens = [tok for tok in tokens if tok.type not in (tokenize.ENCODING, tokenize.ENDMARKER, tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE)]
+
+    print(real_tokens)
+
+    return len(real_tokens)
+
+_msgbox_idx = 0
+def show_popup(title, content):
+    global _msgbox_idx
+    tag = f"_messagebox_{_msgbox_idx}"
+    with dpg.window(tag=tag, no_title_bar=True, no_close=True, no_resize=True, no_collapse=True, no_scrollbar=True):
+        _msgbox_idx += 1
+
+        dpg.add_text(default_value=title)
+        dpg.add_text(default_value=content, wrap=500)
+        dpg.add_spacer(height=10)
+
+        with dpg.group(horizontal=True):
+            dpg.add_spacer(width=250)
+            dpg.add_button(label="OK", callback=lambda:dpg.delete_item(tag), width=30)
+        
 # Editor window
 def resize_editor():
     window_width = dpg.get_item_width("editor_window")-75
@@ -165,7 +193,7 @@ def draw_usercode(sender, app_data, user_data):
     x_offset = (window_width - draw_width) // 2
     y_offset = (window_height - draw_height) // 2
 
-    colormap = {}
+    global user_colormap
     width, height = get_preview_size()
     code = dpg.get_value("userscript")
 
@@ -173,7 +201,7 @@ def draw_usercode(sender, app_data, user_data):
         for x in range(width):
             for y in range(height):
                 color = safe_eval(code, x,y)
-                colormap[f"{x},{y}"] = color
+                user_colormap[f"{x},{y}"] = color
     except Exception as e:
         # if it can generate a pixel it will return without changing the last image
         return
@@ -183,7 +211,7 @@ def draw_usercode(sender, app_data, user_data):
         # Draw
         for x in range(width):
             for y in range(height):
-                color = colormap[f"{x},{y}"]
+                color = user_colormap[f"{x},{y}"]
                 dpg.draw_rectangle(
                     (
                         x_offset + (x * pixel_width),
@@ -196,6 +224,20 @@ def draw_usercode(sender, app_data, user_data):
                     color=(0,0,0,0),
                     fill=color
                 )
+
+    for pixel, value in user_colormap.items():
+        if value != chall_colormap.get(pixel, None):
+            return
+        
+    if challenge != None:
+        name = challenge.get("title")
+        id = challenge.get("id")
+        tokens = get_token_count(dpg.get_value("userscript"))
+
+        if save.get(f"challenge.{id}.completed", False) == False:
+            save.set(f"challenge.{id}.completed", True)
+            save.set(f"challenge.{id}.tokens", tokens)
+            show_popup("Challenge completed!", f"You've solved the '{name}' challenge with {tokens} tokens!")
 
 def toggle_preview():
     if dpg.does_item_exist("preview_window"):
@@ -210,16 +252,8 @@ def toggle_preview():
 
 # Challenges
 challenge = None
-def open_challenge(sender, app_data, user_data):
-    data = challenges[app_data]
+def open_challenge(cid):
     global challenge
-    dpg.delete_item("challenges_list")
-    if data == None:
-        challenge = None
-        dpg.delete_item("chall_preview_window")
-        return 
-    
-    challenge = data
 
     if not dpg.does_item_exist("editor_window"):
         toggle_editor()
@@ -227,10 +261,26 @@ def open_challenge(sender, app_data, user_data):
     if not dpg.does_item_exist("preview_window"):
         toggle_preview()
 
+    dpg.delete_item("challenges_list")
+
+    if cid == None:
+        challenge = None
+
+        if dpg.does_item_exist("userscript"):
+            dpg.set_value("userscript", "return 0xFFFFFF")
+        if dpg.does_item_exist("chall_preview_window"):
+            dpg.delete_item("chall_preview_window")
+        return 
+    
+    challenge = challenges.get(cid)
+
     if dpg.does_item_exist("userscript"):
         dpg.set_value("userscript", challenge.get("starter", "return (255,255,255)"))
     
     draw_usercode(None, None, None)
+
+    if dpg.does_item_exist("chall_preview_window"):
+        dpg.delete_item("chall_preview_window")
 
     with dpg.window(label="Challenge Preview", tag="chall_preview_window", width=300, height=300, no_scrollbar=True, no_close=True):
         with dpg.drawlist(width=265, height=265, tag="chall_drawlist"):
@@ -239,6 +289,8 @@ def open_challenge(sender, app_data, user_data):
     draw_challenge(None, None, None)
 
 def draw_challenge(sender, app_data, user_data):
+    global chall_colormap
+    chall_colormap = {}
     if challenge == None:
         return
 
@@ -270,15 +322,20 @@ def draw_challenge(sender, app_data, user_data):
     x_offset = (window_width - draw_width) // 2
     y_offset = (window_height - draw_height) // 2
 
-    colormap = {}
+    chall_colormap = {}
     width, height = get_preview_size()
+
+    for x in range(width):
+        for y in range(height):
+            color = challenge['run_func'](x,y)
+            chall_colormap[f"{x},{y}"] = postprocessColor(color)
 
     dpg.delete_item("chall_drawlist")
     with dpg.drawlist(width=window_width, height=window_height, parent=window, tag="chall_drawlist"):
         # Draw
         for x in range(width):
             for y in range(height):
-                color = challenge['run_func'](x,y)
+                color = chall_colormap[f"{x},{y}"]
                 dpg.draw_rectangle(
                     (
                         x_offset + (x * pixel_width),
@@ -292,21 +349,30 @@ def draw_challenge(sender, app_data, user_data):
                     fill=color
                 )
 
+def make_chall_callback(challenge_id):
+    return lambda: open_challenge(challenge_id)
+
 def open_challenges_window():
     if dpg.does_item_exist("challenges_list"):
         return dpg.delete_item("challenges_list")
-    
-    height = 300
 
-    with dpg.window(label="Challenges", tag="challenges_list", width=200, height=height):
-        num_items = max(height//20, len(challenges))
+    with dpg.window(label="Challenges", tag="challenges_list", width=200, height=300):
+        with dpg.theme() as completed_button_theme:
+            with dpg.theme_component(dpg.mvButton):
+                dpg.add_theme_color(dpg.mvThemeCol_Button, (34, 173, 19,255))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (32, 148, 19,255))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (34, 173, 19,255))
 
-        dpg.add_listbox(
-            items=list(challenges.keys()),
-            callback=open_challenge,
-            width=-1,
-            num_items=num_items
-        )
+        ordered_challenges = sorted(challenges.values(), key=lambda challenge: challenge.get("index", -1))
+
+        button = dpg.add_button(label="Freeplay", width=-1, callback=make_chall_callback(None))
+
+        for chall in ordered_challenges:
+            cid = chall['id']
+
+            button = dpg.add_button(label=chall['title'], width=-1, callback=make_chall_callback(cid))
+            if save.get(f"challenge.{cid}.completed", False):
+                dpg.bind_item_theme(button, completed_button_theme)
 
 # Menu bar
 with dpg.viewport_menu_bar():
