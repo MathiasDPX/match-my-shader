@@ -2,8 +2,10 @@
 Module for UI Components
 """
 import dearpygui.dearpygui as dpg
+from glob import glob
 import webbrowser
 import asyncio
+import os
 import save_manager as save
 from challenge_manager import challenge_manager
 from code_evaluator import safe_eval, get_token_count, postprocessColor
@@ -50,7 +52,7 @@ def create_welcome_window():
     if save.get("firstTime", True):
         with dpg.window(label="Welcome!", width=500, height=300, tag="welcome_window", no_close=True, no_resize=True):
             with dpg.child_window(autosize_x=True, autosize_y=True):
-                dpg.add_text("Hi! If you're seeing this it mean it's your first time launching 'Match my Shader' \n\nThis game was created in just 10 days for a game jam called Timeless, where the goal was to build a game that someone could enjoy for the next 10 years.\n\nIn Match My Shader, your challenge is to write (Python) code that draws a shader to match a target pixel-perfect result. It's creative, puzzling, and endlessly replayable.\n\nThere is two gamemodes: Freeplay, where you just code for fun or drawing things, and a Challenge mode where you have to match a target (as said about) ", wrap=0)
+                dpg.add_text(open("docs/001_welcome.md", "r", encoding="utf-8").read(), wrap=0)
 
                 dpg.add_button(label="More about Timeless",
                                 callback=lambda: webbrowser.open('https://timeless.hackclub.com/'),
@@ -357,3 +359,40 @@ def open_challenges_window():
                 dpg.bind_item_theme(button, completed_button_theme)
 
     place_window("challenges_list")
+
+
+pages = {}
+for page in glob("*_*.md", root_dir="docs"):
+    content = open(os.path.join("docs", page), "r", encoding="utf-8").readlines()
+    title = content[0][2:-1]
+
+    pages[title] = "".join(content[2:])
+
+def _switch_docs_page(sender, app_data, user_data):
+    content = pages[app_data]
+    dpg.set_value("docs_content", content)
+
+def toggle_docs():
+    """Open documentation window"""
+    if dpg.does_item_exist("documentation_window"):
+        return dpg.delete_item("documentation_window")
+
+    with dpg.window(
+        label="Documentation",
+        tag="documentation_window",
+        width=670,
+        height=560,
+        no_resize=True,
+        on_close=window_close_callback):
+
+        with dpg.group(horizontal=True):
+            dpg.add_listbox(
+                list(pages.keys()),
+                tag="docs_list",
+                width=150,
+                num_items=30
+            )
+
+            dpg.add_text("", tag="docs_content", wrap=500)
+
+        _switch_docs_page(None, "Welcome", None)

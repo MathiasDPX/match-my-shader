@@ -10,6 +10,7 @@ from ui_components import (
     open_challenges_window, 
     toggle_editor, 
     toggle_preview,
+    toggle_docs,
     draw_usercode,
     resize_editor
 )
@@ -34,6 +35,8 @@ def main():
         with dpg.menu(label="Views"):
             dpg.add_menu_item(label="Editor", callback=toggle_editor)
             dpg.add_menu_item(label="Code preview", callback=toggle_preview)
+
+        dpg.add_menu_item(label="Help", callback=toggle_docs)
 
     dpg.setup_dearpygui()
     dpg.show_viewport()
