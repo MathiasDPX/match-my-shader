@@ -1,13 +1,15 @@
 @echo off
-cd game
 
 echo Installing Python dependencies...
 pip install -r requirements.txt
+pip install PyInstaller
 if errorlevel 1 (
     echo Failed to install requirements.
     pause
     exit /b 1
 )
+
+cd game
 
 pyinstaller ^
     -D main.py ^
@@ -20,4 +22,3 @@ pyinstaller ^
     --clean
 
 echo Build complete!
-pause
