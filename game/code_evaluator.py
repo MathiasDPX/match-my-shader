@@ -3,7 +3,7 @@ Module for evaluating code
 """
 import tokenize
 from io import BytesIO
-
+from challenge_manager import challenge_manager
 
 def convertHexToRGB(hex):
     """Convert HEX to RGBA"""
@@ -12,9 +12,8 @@ def convertHexToRGB(hex):
     b = hex & 0xFF
     return (r, g, b, 255)
 
-
-def postprocessColor(color):
-    """Post-process color for converting everything to RGBA"""
+def uniform_color(color):
+    """Convert colors to RGBA"""
     if type(color) == int:
         color = convertHexToRGB(color)
     elif type(color) == tuple:
@@ -26,6 +25,20 @@ def postprocessColor(color):
 
     return color
 
+
+def postprocessColor(color):
+    """Post-process color for converting everything to RGBA"""
+    cur_chall = challenge_manager.get_current_challenge()
+
+    if cur_chall != None:
+        palette = cur_chall.get("palette")
+        if palette != None:
+            try:
+                return uniform_color(palette[color-1])
+            except:
+                return (0,0,0,255)
+    
+    return uniform_color(color)
 
 def safe_eval(usercode, x, y):
     """Safely eval usercode"""

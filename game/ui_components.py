@@ -9,8 +9,8 @@ import os
 from path_manager import *
 import save_manager as save
 from challenge_manager import challenge_manager
-from code_evaluator import safe_eval, get_token_count, postprocessColor
-from window_manager import place_window, window_close_callback
+from code_evaluator import safe_eval, get_token_count, postprocessColor, uniform_color
+from window_manager import place_window, window_close_callback, get_best_text_color
 
 
 # For comparing user/challenge
@@ -192,8 +192,27 @@ def toggle_editor():
             dpg.set_value("userscript", "return (255,255,255)")
         else:
             dpg.set_value("userscript", current_challenge.get("starter", "return (255,255,255)"))
+        
+        if current_challenge == None:
+            palette = []
+        else:
+            palette = current_challenge.get("palette", [])
 
-        dpg.add_text("Tokens: ???", tag="editor_tokens")
+        with dpg.group(horizontal=True):
+            dpg.add_text("Tokens: ???", tag="editor_tokens")
+            dpg.add_spacer(width=203)
+            with dpg.drawlist(width=500, height=20):
+                i = len(palette)
+                for color in palette:
+                    color = uniform_color(color)
+                    x = 500-(i*20)
+                    i -= 1
+                    idx = len(palette)-i
+                     
+                    dpg.draw_rectangle((x,0), (x+20, 20), fill=color, color=(0,0,0,0))
+
+                    dx = 2 if idx>=10 else 5
+                    dpg.draw_text((x+dx, 2.5), str(idx), color=get_best_text_color(color), size=15)
 
         with dpg.group(horizontal=True):
             dpg.add_text("Width :")

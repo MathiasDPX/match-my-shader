@@ -21,5 +21,11 @@ HEADERS = {
 def run(x,y):
     return (255, 0, 0)
 ```
+You can add a 'palette' key in your HEADERS like this
+
+```
+"palette": [0x000000, 0xAAAAAA, 0xFFFFFF]
+```
+
 
 I recommend you to store challenges in a dedicated folder for keeping your folder organized
