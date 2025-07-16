@@ -30,7 +30,7 @@ def window_close_callback(sender, app_data, user_data):
 
 def exit_callback():
     """Callback when the viewport is closed"""
-    window_close_callback("challenges_list", None, None)
-    window_close_callback("editor_window", None, None)
-    window_close_callback("preview_window", None, None)
-    window_close_callback("chall_preview_window", None, None)
+    #window_close_callback("challenges_list", None, None)
+    #window_close_callback("editor_window", None, None)
+    #window_close_callback("preview_window", None, None)
+    #window_close_callback("chall_preview_window", None, None)

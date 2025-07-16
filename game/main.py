@@ -4,6 +4,7 @@ Entrypoint for 'Match my Shader'
 
 import dearpygui.dearpygui as dpg
 import save_manager as save
+from path_manager import *
 from ui_components import (
     create_welcome_window, 
     setup_welcome_window, 
@@ -22,8 +23,8 @@ def main():
         title='Match my Shader',
         width=1600,
         height=1000,
-        small_icon="icon.ico",
-        large_icon="icon.ico"
+        small_icon=resource_path("icon.ico"),
+        large_icon=resource_path("icon.ico")
     )
 
     create_welcome_window()

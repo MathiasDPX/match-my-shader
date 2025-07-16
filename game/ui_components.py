@@ -6,6 +6,7 @@ from glob import glob
 import webbrowser
 import asyncio
 import os
+from path_manager import *
 import save_manager as save
 from challenge_manager import challenge_manager
 from code_evaluator import safe_eval, get_token_count, postprocessColor
@@ -52,7 +53,7 @@ def create_welcome_window():
     if save.get("firstTime", True):
         with dpg.window(label="Welcome!", width=500, height=300, tag="welcome_window", no_close=True, no_resize=True):
             with dpg.child_window(autosize_x=True, autosize_y=True):
-                dpg.add_text(open("docs/001_welcome.md", "r", encoding="utf-8").read(), wrap=0)
+                dpg.add_text(open(os.path.join(resource_path("docs"), "001_welcome.md"), "r", encoding="utf-8").read(), wrap=0)
 
                 dpg.add_button(label="More about Timeless",
                                 callback=lambda: webbrowser.open('https://timeless.hackclub.com/'),
@@ -315,6 +316,10 @@ def open_challenge(cid):
     
     draw_usercode(None, None, None)
 
+    if dpg.does_item_exist("chall_preview_window"):
+        window_close_callback("chall_preview_window", None, None)
+        dpg.delete_item("chall_preview_window")
+
     with dpg.window(label="Challenge Preview", tag="chall_preview_window", width=300, height=300, no_scrollbar=True, no_close=True):
         with dpg.drawlist(width=265, height=265, tag="chall_drawlist"):
             pass
@@ -362,8 +367,8 @@ def open_challenges_window():
 
 
 pages = {}
-for page in glob("*_*.md", root_dir="docs"):
-    content = open(os.path.join("docs", page), "r", encoding="utf-8").readlines()
+for page in glob("*_*.md", root_dir=resource_path("docs")):
+    content = open(os.path.join(resource_path("docs"), page), "r", encoding="utf-8").readlines()
     title = content[0][2:-1]
 
     pages[title] = "".join(content[2:])

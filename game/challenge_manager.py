@@ -1,6 +1,7 @@
 """
 Module for managing challenges
 """
+from path_manager import *
 from glob import glob
 import importlib
 
@@ -13,7 +14,7 @@ class ChallengeManager:
     
     def load_challenges(self):
         """Load every challenges"""
-        for challenge in glob("*.py", root_dir="challenges"):
+        for challenge in glob("*.py", root_dir=resource_path("challenges")):
             module = importlib.import_module(f"challenges.{challenge[:-3]}")
 
             if not hasattr(module, "HEADERS"):
