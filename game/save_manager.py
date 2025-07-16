@@ -1,16 +1,9 @@
-import platformdirs
+from path_manager import *
 import json
-import os
-
-appname="match_my_shader"
-appauthor="mathias"
-datadir = platformdirs.user_data_dir(appname, appauthor)
-
-os.makedirs(datadir, exist_ok=True)
 
 def getall():
     try:
-        with open(os.path.join(datadir, "settings.json"), "r", encoding="utf-8") as f:
+        with open(get_settings_path(), "r", encoding="utf-8") as f:
             return json.load(f)
     except:
         return {}
@@ -24,7 +17,7 @@ def set(key:str, value):
     old = data.get(key)
     data[key] = value
 
-    with open(os.path.join(datadir, "settings.json"), "w+", encoding="utf-8") as f:
+    with open(get_settings_path(), "w+", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False)
 
     return old

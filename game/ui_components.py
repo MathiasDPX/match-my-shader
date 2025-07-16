@@ -363,6 +363,18 @@ def open_challenges_window():
             if save.get(f"challenge.{cid}.completed", False):
                 dpg.bind_item_theme(button, completed_button_theme)
 
+        userchallenges = challenge_manager.get_all_userchallenges().values()
+
+        if len(userchallenges) != 0:
+            dpg.add_text("Custom challenges")
+
+        for chall in userchallenges:
+            cid = chall['id']
+
+            button = dpg.add_button(label=chall['title'], width=-1, callback=make_chall_callback("user."+cid))
+            if save.get(f"challenge.{cid}.completed", False):
+                dpg.bind_item_theme(button, completed_button_theme)
+
     place_window("challenges_list")
 
 
@@ -385,7 +397,7 @@ def toggle_docs():
     with dpg.window(
         label="Documentation",
         tag="documentation_window",
-        width=670,
+        width=700,
         height=560,
         no_resize=True,
         on_close=window_close_callback):
@@ -395,7 +407,8 @@ def toggle_docs():
                 list(pages.keys()),
                 tag="docs_list",
                 width=150,
-                num_items=30
+                num_items=30,
+                callback=_switch_docs_page
             )
 
             dpg.add_text("", tag="docs_content", wrap=500)
