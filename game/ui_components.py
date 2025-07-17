@@ -2,6 +2,9 @@
 Module for UI Components
 """
 import dearpygui.dearpygui as dpg
+from tkinter import filedialog
+from PIL import Image
+import tkinter as tk
 from glob import glob
 import webbrowser
 import asyncio
@@ -147,6 +150,16 @@ def draw_usercode(sender, app_data, user_data):
                     color=(0, 0, 0, 0),
                     fill=color
                 )
+    
+    if dpg.does_item_exist("userpreview_popup"):
+        dpg.delete_item("userpreview_popup")
+
+    with dpg.popup("user_drawlist", no_move=True, min_size=[100,0], max_size=[100,100], tag="userpreview_popup"):
+        dpg.add_button(
+            label="Save as",
+            width=-1,
+            callback=save_userpreview
+        )
 
     tokens = get_token_count(dpg.get_value("userscript"))
     dpg.set_value("editor_tokens", f"Tokens: {tokens}")
@@ -200,6 +213,7 @@ def toggle_editor():
 
         with dpg.group(horizontal=True):
             dpg.add_text("Tokens: ???", tag="editor_tokens")
+            
             dpg.add_spacer(width=203)
             with dpg.drawlist(width=500, height=20):
                 i = len(palette)
@@ -208,7 +222,7 @@ def toggle_editor():
                     x = 500-(i*20)
                     i -= 1
                     idx = len(palette)-i
-                     
+                    
                     dpg.draw_rectangle((x,0), (x+20, 20), fill=color, color=(0,0,0,0))
 
                     dx = 2 if idx>=10 else 5
@@ -235,7 +249,7 @@ def toggle_preview():
     with dpg.window(label="Code Preview", tag="preview_window", width=300, height=300, no_scrollbar=True, on_close=window_close_callback):
         with dpg.drawlist(width=265, height=265, tag="user_drawlist"):
             draw_usercode(None, None, None)
-
+    
     place_window("preview_window")
     dpg.bind_item_handler_registry("preview_window", "preview_handler")
     draw_usercode(None, None, None)
@@ -433,3 +447,29 @@ def toggle_docs():
             dpg.add_text("", tag="docs_content", wrap=500)
 
         _switch_docs_page(None, "Welcome", None)
+
+def save_userpreview():
+    image = Image.new(mode="RGBA", size=get_preview_size())
+    dpg.configure_item("userpreview_popup", show=False)
+
+    for pos, pixel in user_colormap.items():
+        x,y = pos.split(",")
+        x,y = int(x), int(y)
+        
+        image.putpixel((x,y), pixel)
+
+    root = tk.Tk()
+    root.withdraw()
+
+    file_path = filedialog.asksaveasfilename(
+        title="Save Image As",
+        defaultextension=".png",
+        initialfile="image.png",
+        filetypes=[("PNG Image", "*.png")]
+    )
+
+    root.destroy()
+
+    if file_path:
+        image.save(file_path)
+        print(f"Image saved to: {file_path}")

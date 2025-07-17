@@ -8,7 +8,7 @@ from path_manager import *
 from ui_components import (
     create_welcome_window, 
     setup_welcome_window, 
-    open_challenges_window, 
+    open_challenges_window,
     toggle_editor, 
     toggle_preview,
     toggle_docs,
