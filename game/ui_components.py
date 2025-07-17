@@ -54,9 +54,9 @@ def setup_welcome_window():
 def create_welcome_window():
     """Create welcome window"""
     if save.get("firstTime", True):
-        with dpg.window(label="Welcome!", width=500, height=300, tag="welcome_window", no_close=True, no_resize=True):
+        with dpg.window(label="Welcome!", modal=True, width=500, height=300, tag="welcome_window", no_close=True, no_resize=True):
             with dpg.child_window(autosize_x=True, autosize_y=True):
-                dpg.add_text(open(os.path.join(resource_path("docs"), "001_welcome.md"), "r", encoding="utf-8").read(), wrap=0)
+                dpg.add_text(open(os.path.join(resource_path("docs"), os.path.join("001_Getting started","001_welcome.md")), "r", encoding="utf-8").read(), wrap=0)
 
                 dpg.add_button(label="More about Timeless",
                                 callback=lambda: webbrowser.open('https://timeless.hackclub.com/'),
@@ -412,11 +412,27 @@ def open_challenges_window():
 
 
 pages = {}
-for page in glob("*_*.md", root_dir=resource_path("docs")):
+
+docs_folder = resource_path("docs")
+
+for category in [d for d in glob(os.path.join(docs_folder, "*")) if os.path.isdir(d)]:
+    cat_title = os.path.basename(category)[4:]
+    
+    pages[cat_title] = f"{cat_title}\n\n"
+    for page in glob(os.path.join(category, "*.md")):
+        content = open(page, "r", encoding="utf-8").readlines()
+
+        title = "- "+content[0][2:-1]
+        pages[title] = "".join(content[2:])
+        pages[cat_title] += f"{title}\n"
+
+"""
+for page in glob("*_*.md", root_dir=resource_path("docs"), dir_fd=):
     content = open(os.path.join(resource_path("docs"), page), "r", encoding="utf-8").readlines()
     title = content[0][2:-1]
 
     pages[title] = "".join(content[2:])
+"""
 
 def _switch_docs_page(sender, app_data, user_data):
     content = pages[app_data]
@@ -444,9 +460,12 @@ def toggle_docs():
                 callback=_switch_docs_page
             )
 
+            dpg.set_value("docs_list", "- Welcome")
+
             dpg.add_text("", tag="docs_content", wrap=500)
 
-        _switch_docs_page(None, "Welcome", None)
+        _switch_docs_page(None, "- Welcome", None)
+
 
 def save_userpreview():
     image = Image.new(mode="RGBA", size=get_preview_size())
