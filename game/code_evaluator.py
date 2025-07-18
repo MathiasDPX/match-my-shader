@@ -1,6 +1,7 @@
 """
 Module for evaluating code
 """
+import math
 import tokenize
 from io import BytesIO
 from challenge_manager import challenge_manager
@@ -48,10 +49,12 @@ def safe_eval(usercode, x, y):
     for line in usercode.splitlines():
         wrapped_code += f"    {line}\n"
 
+    safe_math = {k: getattr(math, k) for k in dir(math) if not k.startswith("__")}
     safe_globals = {
         "__builtins__": {
             "abs": abs, "min": min, "max": max, "sum": sum,
             "range": range, "len": len,
+            **safe_math
         }
     }
 
