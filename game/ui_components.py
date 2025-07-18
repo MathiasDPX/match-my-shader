@@ -200,7 +200,7 @@ def draw_usercode(sender, app_data, user_data):
         challenge_id = current_challenge.get("id")
 
         if save.get(f"challenge.{challenge_id}.completed", False) == False:
-            #save.set(f"challenge.{challenge_id}.completed", True)
+            save.set(f"challenge.{challenge_id}.completed", True)
             save.set(f"challenge.{challenge_id}.tokens", tokens)
             show_popup("Challenge completed!", f"You've solved the '{name}' challenge with {tokens} tokens!")
         else:
