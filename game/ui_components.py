@@ -26,6 +26,15 @@ chall_colormap = {}
 # Index for popups
 _msgbox_idx = 0
 
+def get_next_challid():
+    current_chall = challenge_manager.get_current_challenge()
+
+    sorted_data = sorted(challenge_manager.get_all_challenges().values(), key=lambda x: x["index"])
+    for i, item in enumerate(sorted_data):
+        if item['index'] == current_chall['index']+1:
+            return item["id"]
+        
+    return None
 
 def show_popup(title, content):
     """Open a popup"""
@@ -39,7 +48,13 @@ def show_popup(title, content):
         dpg.add_spacer(height=10)
 
         with dpg.group(horizontal=True):
-            dpg.add_spacer(width=250)
+            nextcid = get_next_challid()
+
+            dpg.add_spacer(width=300 if nextcid != None else 340)
+
+            if nextcid != None:
+                dpg.add_button(label="Next", callback=make_chall_callback(nextcid, popup=tag), width=40)
+
             dpg.add_button(label="OK", callback=lambda: dpg.delete_item(tag), width=30)
 
 
@@ -185,7 +200,7 @@ def draw_usercode(sender, app_data, user_data):
         challenge_id = current_challenge.get("id")
 
         if save.get(f"challenge.{challenge_id}.completed", False) == False:
-            save.set(f"challenge.{challenge_id}.completed", True)
+            #save.set(f"challenge.{challenge_id}.completed", True)
             save.set(f"challenge.{challenge_id}.tokens", tokens)
             show_popup("Challenge completed!", f"You've solved the '{name}' challenge with {tokens} tokens!")
         else:
@@ -386,8 +401,14 @@ def open_challenge(cid):
     draw_challenge(None, None, None)
 
 
-def make_chall_callback(challenge_id):
+def make_chall_callback(challenge_id, popup=None):
     """Create callback for opening a challenge"""
+    if popup != None:
+        return lambda: (
+            dpg.delete_item(popup),
+            open_challenge(challenge_id),
+        )
+
     return lambda: open_challenge(challenge_id)
 
 
