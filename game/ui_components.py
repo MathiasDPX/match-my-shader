@@ -185,6 +185,30 @@ def draw_usercode(sender, app_data, user_data):
                 show_popup("Record beaten!", f"You've beat your past record for this challenge by {old_record-tokens} tokens ({old_record} -> {tokens})")
 
 
+def draw_palette():
+    drawlist = dpg.get_item_parent("palette_layer")
+    dpg.delete_item("palette_layer")
+    current_challenge = challenge_manager.get_current_challenge()
+
+    if current_challenge == None:
+        palette = []
+    else:
+        palette = current_challenge.get("palette", [])
+
+    with dpg.draw_layer(parent=drawlist, tag="palette_layer"):
+        i = len(palette)
+        for color in palette:
+            color = uniform_color(color)
+            x = 500-(i*20)
+            i -= 1
+            idx = len(palette)-i
+
+            dpg.draw_rectangle((x,0), (x+20, 20), fill=color, color=(0,0,0,0))
+
+            dx = 2 if idx>=10 else 5
+            dpg.draw_text((x+dx, 2.5), str(idx), color=get_best_text_color(color), size=15)
+
+
 def toggle_editor():
     """Show/hide editor"""
     if dpg.does_item_exist("editor_window"):
@@ -205,28 +229,16 @@ def toggle_editor():
             dpg.set_value("userscript", "return (255,255,255)")
         else:
             dpg.set_value("userscript", current_challenge.get("starter", "return (255,255,255)"))
-        
-        if current_challenge == None:
-            palette = []
-        else:
-            palette = current_challenge.get("palette", [])
 
         with dpg.group(horizontal=True):
             dpg.add_text("Tokens: ???", tag="editor_tokens")
             
             dpg.add_spacer(width=203)
             with dpg.drawlist(width=500, height=20):
-                i = len(palette)
-                for color in palette:
-                    color = uniform_color(color)
-                    x = 500-(i*20)
-                    i -= 1
-                    idx = len(palette)-i
-                    
-                    dpg.draw_rectangle((x,0), (x+20, 20), fill=color, color=(0,0,0,0))
+                with dpg.draw_layer(tag="palette_layer"):
+                    pass
 
-                    dx = 2 if idx>=10 else 5
-                    dpg.draw_text((x+dx, 2.5), str(idx), color=get_best_text_color(color), size=15)
+        draw_palette()
 
         with dpg.group(horizontal=True):
             dpg.add_text("Width :")
@@ -320,6 +332,8 @@ def draw_challenge(sender, app_data, user_data):
         for x in range(width):
             for y in range(height):
                 asyncio.run(draw_pixel(x, y))
+
+    draw_palette()
 
 
 def open_challenge(cid):
