@@ -50,9 +50,13 @@ def setup_welcome_window():
     y = int((vp_height - 300) / 2)
     dpg.set_item_pos("welcome_window", [x, y])
 
-    dpg.set_item_pos("welcome.close", [430, 235])
-    dpg.set_item_pos("welcome.timeless", [280, 235])
+    dpg.set_item_pos("welcome.start", [420, 235])
+    dpg.set_item_pos("welcome.timeless", [270, 235])
 
+
+def _start_welcome_modal():
+    dpg.hide_item("welcome_window")
+    open_challenge("welcome")
 
 def create_welcome_window():
     """Create welcome window"""
@@ -65,9 +69,9 @@ def create_welcome_window():
                                 callback=lambda: webbrowser.open('https://timeless.hackclub.com/'),
                                 tag="welcome.timeless")
                 
-                dpg.add_button(label="Close",
-                                callback=lambda: dpg.hide_item("welcome_window"),
-                                tag="welcome.close")
+                dpg.add_button(label="Start!",
+                                callback=_start_welcome_modal,
+                                tag="welcome.start")
 
 
 def resize_editor():
