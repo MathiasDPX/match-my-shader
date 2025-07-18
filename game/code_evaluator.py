@@ -14,6 +14,8 @@ def convertHexToRGB(hex):
 
 def uniform_color(color):
     """Convert colors to RGBA"""
+    if color is None:
+        return (0,)*4 # transparent black
     if type(color) == int:
         color = convertHexToRGB(color)
     elif type(color) == tuple:
@@ -35,8 +37,8 @@ def postprocessColor(color):
         if palette != None:
             try:
                 return uniform_color(palette[color-1])
-            except:
-                return (0,0,0,255)
+            except Exception as e:
+                return (0,0,0,0)
     
     return uniform_color(color)
 
