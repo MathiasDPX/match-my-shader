@@ -126,6 +126,7 @@ def draw_usercode(sender, app_data, user_data):
     width, height = get_preview_size()
     code = dpg.get_value("userscript")
 
+    user_colormap.clear()
     try:
         for x in range(width):
             for y in range(height):
