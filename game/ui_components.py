@@ -349,6 +349,7 @@ def open_challenge(cid):
     dpg.delete_item("challenges_list")
 
     if cid is None:
+        draw_palette()
         if dpg.does_item_exist("userscript"):
             dpg.set_value("userscript", "return 0xFFFFFF")
         if dpg.does_item_exist("chall_preview_window"):
