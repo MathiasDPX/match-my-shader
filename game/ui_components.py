@@ -9,11 +9,14 @@ from glob import glob
 import webbrowser
 import asyncio
 import os
+import sys
 from path_manager import *
 import save_manager as save
 from challenge_manager import challenge_manager
 from code_evaluator import safe_eval, get_token_count, postprocessColor, uniform_color
 from window_manager import place_window, window_close_callback, get_best_text_color
+
+VERBOSE_MODE = "-v" in sys.argv or "--verbose" in sys.argv
 
 
 # For comparing user/challenge
@@ -130,6 +133,8 @@ def draw_usercode(sender, app_data, user_data):
                 user_colormap[f"{x},{y}"] = color
     except Exception as e:
         # If it can't eval a pixel, don't change the drawing
+        if VERBOSE_MODE:
+            print(f"Error evaluating code at pixel ({x}, {y}): {e}")
         return
 
     dpg.delete_item("user_drawlist")
