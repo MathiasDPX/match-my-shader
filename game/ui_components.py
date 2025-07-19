@@ -92,8 +92,10 @@ def create_welcome_window():
 def resize_editor():
     """Trigger when editor is resized"""
     window_width = dpg.get_item_width("editor_window") - 75
-    dpg.set_item_width("width-editor-slider", window_width)
-    dpg.set_item_width("height-editor-slider", window_width)
+
+    if dpg.does_item_exist("width-editor-slider"):
+        dpg.set_item_width("width-editor-slider", window_width)
+        dpg.set_item_width("height-editor-slider", window_width)
 
 
 def get_preview_size():
@@ -240,16 +242,19 @@ def toggle_editor():
         return dpg.delete_item("editor_window")
 
     with dpg.window(label='Editor', tag="editor_window", width=800, height=600, on_close=window_close_callback):
+        current_challenge = challenge_manager.get_current_challenge()
+
+        inputHeight = -70 if current_challenge is None else -30
+
         dpg.add_input_text(
             width=-1,
-            height=-70,
+            height=inputHeight,
             tag="userscript",
             multiline=True,
             tab_input=True,
             callback=draw_usercode
         )
 
-        current_challenge = challenge_manager.get_current_challenge()
         if current_challenge is None:
             dpg.set_value("userscript", "return (255,255,255)")
         else:
@@ -265,13 +270,14 @@ def toggle_editor():
 
         draw_palette()
 
-        with dpg.group(horizontal=True):
-            dpg.add_text("Width :")
-            dpg.add_slider_int(min_value=1, max_value=512, width=725, tag="width-editor-slider", default_value=16)
+        if current_challenge is None:
+            with dpg.group(horizontal=True):
+                dpg.add_text("Width :")
+                dpg.add_slider_int(min_value=1, max_value=512, width=725, tag="width-editor-slider", default_value=16)
 
-        with dpg.group(horizontal=True):
-            dpg.add_text("Height:")
-            dpg.add_slider_int(min_value=1, max_value=512, width=725, tag="height-editor-slider", default_value=16)
+            with dpg.group(horizontal=True):
+                dpg.add_text("Height:")
+                dpg.add_slider_int(min_value=1, max_value=512, width=725, tag="height-editor-slider", default_value=16)
 
     place_window("editor_window")
     dpg.bind_item_handler_registry("editor_window", "editor_handler")
@@ -367,6 +373,9 @@ def open_challenge(cid):
     challenge_manager.set_current_challenge(cid)
 
     if not dpg.does_item_exist("editor_window"):
+        toggle_editor()
+    else:
+        toggle_editor()
         toggle_editor()
 
     if not dpg.does_item_exist("preview_window"):
