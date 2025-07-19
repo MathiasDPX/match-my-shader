@@ -343,9 +343,9 @@ def draw_challenge(sender, app_data, user_data):
             chall_colormap[f"{x},{y}"] = postprocessColor(color)
 
     dpg.delete_item("chall_drawlist")
-    with dpg.drawlist(width=window_width, height=window_height+20, parent=window, tag="chall_drawlist"):
+    with dpg.drawlist(width=window_width, height=window_height+15, parent=window, tag="chall_drawlist"):
         # Draw
-        dpg.draw_text((0,280), f"Canva: {width}x{height}", size=15)
+        dpg.draw_text((window_width/2-45,window_height), f"Canva: {width}x{height}", size=15)
         async def draw_pixel(x, y):
             color = chall_colormap[f"{x},{y}"]
             dpg.draw_rectangle(
@@ -403,7 +403,7 @@ def open_challenge(cid):
         window_close_callback("chall_preview_window", None, None)
         dpg.delete_item("chall_preview_window")
 
-    with dpg.window(label="Challenge Preview", tag="chall_preview_window", width=300, height=330, no_scrollbar=True, no_close=True):
+    with dpg.window(label="Challenge Preview", tag="chall_preview_window", width=300, height=340, no_scrollbar=True, no_close=True):
         with dpg.drawlist(width=265, height=265, tag="chall_drawlist"):
             pass
 
