@@ -309,7 +309,7 @@ def draw_challenge(sender, app_data, user_data):
     aspect_ratio = preview_width / preview_height
 
     window_width = dpg.get_item_width("chall_preview_window") - 17.5
-    window_height = dpg.get_item_height("chall_preview_window") - 35
+    window_height = dpg.get_item_height("chall_preview_window") - 50
     window = dpg.get_item_parent("chall_drawlist")
 
     if window_width / window_height > aspect_ratio:
@@ -327,7 +327,7 @@ def draw_challenge(sender, app_data, user_data):
     
     # Center the rectangle
     x_offset = (window_width - draw_width) // 2
-    y_offset = (window_height - draw_height) // 2
+    y_offset = ((window_height - draw_height) // 2)
 
     width, height = get_preview_size()
 
@@ -337,8 +337,9 @@ def draw_challenge(sender, app_data, user_data):
             chall_colormap[f"{x},{y}"] = postprocessColor(color)
 
     dpg.delete_item("chall_drawlist")
-    with dpg.drawlist(width=window_width, height=window_height, parent=window, tag="chall_drawlist"):
+    with dpg.drawlist(width=window_width, height=window_height+20, parent=window, tag="chall_drawlist"):
         # Draw
+        dpg.draw_text((0,280), f"Canva: {width}x{height}", size=15)
         async def draw_pixel(x, y):
             color = chall_colormap[f"{x},{y}"]
             dpg.draw_rectangle(
@@ -393,7 +394,7 @@ def open_challenge(cid):
         window_close_callback("chall_preview_window", None, None)
         dpg.delete_item("chall_preview_window")
 
-    with dpg.window(label="Challenge Preview", tag="chall_preview_window", width=300, height=300, no_scrollbar=True, no_close=True):
+    with dpg.window(label="Challenge Preview", tag="chall_preview_window", width=300, height=330, no_scrollbar=True, no_close=True):
         with dpg.drawlist(width=265, height=265, tag="chall_drawlist"):
             pass
 
