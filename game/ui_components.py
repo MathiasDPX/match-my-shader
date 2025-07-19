@@ -50,10 +50,17 @@ def show_popup(title, content):
         with dpg.group(horizontal=True):
             nextcid = get_next_challid()
 
-            dpg.add_spacer(width=300 if nextcid != None else 340)
+            dpg.add_spacer(width=340 if nextcid != None else 340)
 
             if nextcid != None:
                 dpg.add_button(label="Next", callback=make_chall_callback(nextcid, popup=tag), width=40)
+            else:
+                dpg.add_button(label="Custom challenges", callback=lambda: (
+                    dpg.delete_item(tag),
+                    toggle_docs(),
+                    _switch_docs_page(None, "- Custom challenges", None),
+                    dpg.set_value("docs_list", "- Custom challenges")
+                ), width=130)
 
             dpg.add_button(label="OK", callback=lambda: dpg.delete_item(tag), width=30)
 
